@@ -45,8 +45,7 @@ find(char *start, char *file)
         if(de.inum == 0){
             continue;
         }
-        
-	memmove(p, de.name, DIRSIZ);
+        memmove(p, de.name, DIRSIZ);
         p[DIRSIZ] = 0;
         
         if(stat(buf, &st) < 0){
@@ -58,12 +57,11 @@ find(char *start, char *file)
         if (strcmp(de.name, ".") == 0 || strcmp(de.name, "..") == 0)
             continue;
         
-        if(!strcmp(de.name, file)){
+        if(!strcmp(de.name, file))
             printf("%s\n", buf);
-            }
+   
         if(st.type == T_DIR)
-            find(buf, file);
-            	
+            find(buf, file);  	
     }
     close(fd);
 }
