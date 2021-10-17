@@ -77,11 +77,42 @@ sys_sleep(void)
 
 
 #ifdef LAB_PGTBL
-int
+// inform which pages have been accessed
+uint64
 sys_pgaccess(void)
 {
-  // lab pgtbl: your code here.
-  return 0;
+    uint64 start;
+    int npages;
+    uint64 bitmask_user_address;
+    
+    uint64 bitmask_kernel = 0;
+    
+    if(argaddr(0, &start) < 0)
+        return -1;
+    if(argint(1, &npages) < 0)
+        return -1;
+    if(argaddr(2, &bitmask_user_address) < 0)
+        return -1;
+        
+    if(npages < 0){
+        return -1;
+    }
+    if(start > MAXVA)
+        return -1;
+    if(bitmask_user_address > MAXVA)
+        return -1;
+    
+    for(int i = 0; i < npages; i++){
+        pte_t *pte = walk(myproc()->pagetable, start, 0);
+        if(*pte & PTE_A && pte != 0){
+            bitmask_kernel |= 1 << i;
+            *pte &= ~PTE_A;
+        }
+        start += PGSIZE;
+    }
+    if(copyout(myproc()->pagetable, bitmask_user_address, (char *) &bitmask_kernel, (npages + 7)/8))
+        return -1;
+    return 0;
 }
 #endif
 
@@ -107,3 +138,4 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+

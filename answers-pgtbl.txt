@@ -1,0 +1,8 @@
+Ktoré iné systémové volania môžu byť urýchlené prostredníctvom tejto zdieľanej stránky?
+fork(void)
+
+Vysvetlite výstup funkcie vmprint() a jeho súvis s obrázkom 3-4 z xv6 knižky. Čo obsahuje stránka 0? Čo je v stránke 2? Keď proces beží v užívateľskom móde, môže prečítať/zapísať pamäť mapovanú stránkou 1? Čo obsahuje tretia stránka od konca?
+
+Výstup funkcie je stav tabuľky stránok procesu init pred jeho spustením. Tabuľka L2 má indexy od 0 do 255. Indexe 0 má ďalšiu tabuľku úrovňou L1. Tabuľke úrovňou L0 má tabuľky indexom od 0 do 2. Na výstupe je index, bity pte a fyzická adresa, opisuje  virtuálnu pamäť užívateľa na náš proces tak ako všeobecnosti opisuje aj obrázok 3.4.
+Stránka 0 obsahuje data. Stránka 2 obsahuje stack. Stránka 1 obsahuje guard page, keď proces beží v užívateľskom móde vtedy nemôže prečítať alebo zapísať pamäť mapovanú stránkou ( RWX- ) lebo príznak U nie je nastavený.
+Tretia stránka od konca je stránka usyscall (predposledný 510 je trapframe a posledný 511 je trampolina).
