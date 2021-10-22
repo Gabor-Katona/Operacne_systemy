@@ -1,0 +1,20 @@
+Ktoré registre obsahujú argumenty funkcií? V ktorom registri je napríklad uložené číslo 13 (argument funkcie printf())?
+a0 a1 a2 registre obsahujú argumenty funkcii.  13 je uložené v registri a2.
+
+Kde je volanie funkcie f() z funkcie main()? Kde je volanie funkcie g()?
+Konkrétne volanie funkcie f() a g() nie je, v funkcie main je rovno napísane (inlinovanie) do registra a2 hodnota 12 (riadok 46).
+
+Na ktorej adrese sa nachádza funkcia printf()?
+Na adrese 628 je funkcia printf() ( jalr 1528(ra) # 628 <printf> ).
+
+Aká hodnota je v registri ra hneď po jalr do funkcie printf() vo funkcii main()?
+V registri ra je hodnota 30 (tam sa uloží pc).
+
+Aký je jeho výstup? 
+Výstup je “HE110 World” ( %x je hexadecimálny výpis a %s je výpis reťazca ).
+
+Aký bude výstup závisí od toho, či je architektúra RISC-V little-endian. Ak by bol RISC-V big-endian, akú hodnotu by ste museli priradiť premennej i, aby bol výstup totožný? Bolo by tiež potrebné zmeniť hodnotu 57616?
+V little-endiane premennú i vypíše ako reťazec od konca (0x72 = r , 0x6c = l , 0x64 = d , 0x00 = koniec reťazca ). V big-endian premennej i by sme museli priradiť hodnotu 0x726c6400. Hodnotu 57616 by sme nemali meniť lebo je dekadickom tvare.
+
+Čo bude na výpise za 'y=' v nižšie uvedenom kóde? (poznámka: nie je to žiadna špecifická hodnota.) Prečo sa to deje?
+Na výpise za y bude hodnota nasledujúceho registra ‘a’ našom prípade registra a2. 
