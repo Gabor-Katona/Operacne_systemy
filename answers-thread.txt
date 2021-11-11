@@ -1,0 +1,5 @@
+Prečo v tabuľke chýbali kľúče, keď sme použili dve vlákna, ale všetko bolo v poriadku pri jednom vlákne?
+
+Keď požijeme dve (alebo viac) vlákna môže sa stať  situácia keď dve vlákna vykonávajú naraz funkciu insert(), zoberú začiatok zoznamu a potom sa pokúsia naraz zapísať do začiatok zoznamu
+(bucket) 2 rôzne záznamy.  Jedno vlákno zapíše svoj záznam na začiatok zoznamu a potom druhé vlákno zapíše iný záznam na začiatok zoznamu. Vtedy jeden záznam sa stratí. 
+
