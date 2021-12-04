@@ -309,6 +309,32 @@ sys_open(void)
       return -1;
     }
     ilock(ip);
+    
+    
+    if(ip->type == T_SYMLINK && !(omode & O_NOFOLLOW)){
+      int i;
+      char target[MAXPATH];
+      
+      for(i = 0; i < 10; i++){
+        if(ip->type != T_SYMLINK){
+          break;
+        }
+
+        readi(ip, 0, (uint64)target, 0, MAXPATH);
+        iunlockput(ip);
+        if((ip = namei(target)) == 0){
+          end_op();
+          return -1;         // do not exist
+        }
+        ilock(ip);
+      }
+      if(i == 10){          // too deep
+        iunlockput(ip);
+        end_op();
+        return -1;
+      }
+    }
+    
     if(ip->type == T_DIR && omode != O_RDONLY){
       iunlockput(ip);
       end_op();
@@ -482,5 +508,66 @@ sys_pipe(void)
     fileclose(wf);
     return -1;
   }
+  return 0;
+}
+
+// create new symbolic link at path that refers to file named by target
+uint64 
+sys_symlink(void)
+{
+  char target[MAXPATH], path[MAXPATH];
+  struct inode *ip, *dp;
+  char name[DIRSIZ];
+
+  if(argstr(0, target, MAXPATH) < 0 || argstr(1, path, MAXPATH) < 0){
+    return -1;
+  }
+  
+  begin_op();
+  if((dp = nameiparent(path, name)) == 0){
+    end_op();
+    return -1;
+  }
+
+  ilock(dp);
+
+  if((ip = dirlookup(dp, name, 0)) != 0){
+    iunlockput(dp);
+    ilock(ip);
+    if(T_SYMLINK == T_FILE && (ip->type == T_FILE || ip->type == T_DEVICE)){
+      goto write;
+    }
+    iunlockput(ip);
+    end_op();
+    return -1;
+  }
+
+  if((ip = ialloc(dp->dev, T_SYMLINK)) == 0)
+    panic("create: ialloc");
+
+  ilock(ip);
+  ip->major = 0;
+  ip->minor = 0;
+  ip->nlink = 1;
+  iupdate(ip);
+
+  if(dirlink(dp, name, ip->inum) < 0)
+    panic("create: dirlink");
+    
+  iunlockput(dp);
+  
+  write: 
+  if(ip == 0){
+    end_op();
+    return -1;
+  }
+
+  if(writei(ip, 0, (uint64)target, 0, MAXPATH) != MAXPATH){
+    end_op();
+    return -1;
+  }
+
+  iunlockput(ip);
+  end_op();
   return 0;
 }
