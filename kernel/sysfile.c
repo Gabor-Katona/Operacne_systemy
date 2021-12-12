@@ -15,6 +15,7 @@
 #include "sleeplock.h"
 #include "file.h"
 #include "fcntl.h"
+#include "memlayout.h"
 
 // Fetch the nth word-sized system call argument as a file descriptor
 // and return both the descriptor and the corresponding struct file.
@@ -483,4 +484,135 @@ sys_pipe(void)
     return -1;
   }
   return 0;
+}
+
+uint64
+sys_mmap(void)
+{
+  uint64 addr;
+  int length, prot, flags, fd, offset;
+  if(argaddr(0, &addr) == -1)
+    return -1;
+  if(argint(1, &length) == -1)
+    return -1;
+  if(argint(2, &prot) == -1)
+    return -1;
+  if(argint(3, &flags) == -1)
+    return -1;
+  if(argint(4, &fd) == -1)
+    return -1;
+  if(argint(5, &offset) == -1)
+    return -1;
+  struct vma *vma = find_empty_vma(myproc());
+  if(vma == 0)
+    return -1;
+  vma->length = length;
+  vma->flags = flags;
+  vma->offset = offset;
+  vma->prot = prot;
+  
+  if(flags & MAP_SHARED && !myproc()->ofile[fd]->writable && prot & PROT_WRITE)
+    return -1;
+  
+  uint64 mmap_addr = alloc_mmap(myproc());
+  if(mmap_addr + length > TRAPFRAME){
+    return -1;
+  }
+  
+  vma->f = myproc()->ofile[fd];
+  filedup(vma->f);
+  vma->address = mmap_addr;
+  return mmap_addr;
+}
+
+int write_back(struct file *f, uint64 addr, int n, int offset);
+
+uint64
+sys_munmap(void)
+{
+  uint64 addr;
+  int length;
+  if(argaddr(0, &addr) == -1)
+    return -1;
+  if(argint(1, &length) == -1)
+    return -1;
+    
+  struct proc *p = myproc();
+  struct vma* vma = search_vma(p, addr);
+  int offset, close = 0;
+  
+  while (vma) {
+    if(vma->length == 0){
+      continue;
+    }
+    
+    if(addr < (vma->address + vma->length) && addr >= vma->address) {
+      close = 0;
+      offset = vma->offset;
+      addr = PGROUNDDOWN(addr);
+      length = PGROUNDUP(length);
+     
+      if(addr == vma->address) {
+       
+        if(length == vma->length) {
+          vma->length = 0;
+          close = 1;
+        } 
+        else {
+          vma->address += length;
+          vma->offset += length;
+          vma->length -= length;
+        }
+      } 
+      else {
+        vma->length -= length;
+      }
+      
+      if(vma->flags & MAP_SHARED) {
+        
+        write_back(vma->f, addr, length, offset);
+      }
+      
+      uvmunmap(p->pagetable, addr, length/PGSIZE, 1);
+      if(close){
+        fileclose(vma->f);
+        vma->f = 0;
+      }
+    }
+    vma = search_vma(p, addr);
+  }
+  return 0;
+}
+
+// write back pages
+int
+write_back(struct file *f, uint64 addr, int n, int offset) {
+    int r, ret = 0;
+    if(f->writable == 0)
+        return -1;
+    if(f->type != FD_INODE) {
+        panic("filewrite");
+    }
+
+    int max = ((MAXOPBLOCKS-1-1-2) / 2) * BSIZE;
+    int i = 0;
+    while(i < n) {
+        int n1 = n - i;
+        if(n1 > max)
+            n1 = max;
+
+        begin_op();
+        ilock(f->ip);
+        if ((r = writei(f->ip, 1, addr + i, offset, n1)) > 0)
+            offset += r;
+        iunlock(f->ip);
+        end_op();
+
+        if(r != n1) {
+            break;
+        }
+        i += r;
+    }
+    ret = (i == n ? n : -1);
+    return ret;
 }

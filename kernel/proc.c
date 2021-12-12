@@ -291,6 +291,15 @@ fork(void)
 
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
+  
+  //memmove(np->vma, p->vma, sizeof(struct vma));
+  
+  for(int i = 0; i < VMA_NUM; ++i) {		
+    if(p->vma[i].length) {
+        memmove(&(np->vma[i]), &(p->vma[i]), sizeof(struct vma));
+        filedup(p->vma[i].f);
+    } 
+  }
 
   // Cause fork to return 0 in the child.
   np->trapframe->a0 = 0;
@@ -352,6 +361,14 @@ exit(int status)
       p->ofile[fd] = 0;
     }
   }
+  
+  for(int i = 0; i < VMA_NUM; i++) {		
+    struct vma *vma = &(p->vma[i]);
+    if(vma->length != 0){
+        uvmunmap(p->pagetable, vma->address, vma->length/PGSIZE, 1);
+        vma->length = 0;
+    }
+ }
 
   begin_op();
   iput(p->cwd);
