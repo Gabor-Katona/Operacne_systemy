@@ -1,8 +1,30 @@
-xv6 is a re-implementation of Dennis Ritchie's and Ken Thompson's Unix
-Version 6 (v6).  xv6 loosely follows the structure and style of v6,
-but is implemented for a modern RISC-V multiprocessor using ANSI C.
+# XV6 Linux Kernel Modifications
 
-ACKNOWLEDGMENTS
+This repository contains assignments and modifications made to the XV6 Linux kernel as part of the "Operačné systémy" course at the Faculty of Electrical Engineering and Information Technology of the Slovak Technical University in Bratislava. The course is structured similarly to the MIT course "Operating Systems Engineering" (6.828), which uses the XV6 Linux kernel.
+
+## Course Information
+
+- **University**: Slovak Technical University in Bratislava
+- **Faculty**: Faculty of Electrical Engineering and Information Technology (FEI)
+- **Course Name**: Operačné systémy (Operating Systems)
+- **Course Website**: [https://uim.fei.stuba.sk/b-os-2021/](https://uim.fei.stuba.sk/b-os-2021/)
+- **MIT Course Reference**: [Operating Systems Engineering (6.828)](https://pdos.csail.mit.edu/6.828/2021/)
+
+## Course Overview
+The course covers fundamental concepts in operating systems and practical applications using XV6 Linux kernel. Topics include:
+- Introduction to Operating Systems
+- System Calls
+- Processes and Threads
+- Process Scheduling
+- Process Synchronization
+- Memory Management
+- File Systems
+- Interrupts
+- System Programming
+
+Each assignment is organized into its own branch.
+
+## ACKNOWLEDGMENTS
 
 xv6 is inspired by John Lions's Commentary on UNIX 6th Edition (Peer
 to Peer Communications; ISBN: 1-57398-013-7; 1st edition (June 14,
@@ -39,7 +61,7 @@ Please send errors and suggestions to Frans Kaashoek and Robert Morris
 operating system for MIT's 6.S081, so we are more interested in
 simplifications and clarifications than new features.
 
-BUILDING AND RUNNING XV6
+## BUILDING AND RUNNING XV6
 
 You will need a RISC-V "newlib" tool chain from
 https://github.com/riscv/riscv-gnu-toolchain, and qemu compiled for
